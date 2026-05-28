@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="智汇交通分析系统：集成语义检索、多模态视频分析与交规知识图谱的智能管理平台。" />
+  <title>智汇交枢</title>
+  <link rel="icon" type="image/png" href="/frontend/icons/icon.png" />
+  <link rel="shortcut icon" type="image/png" href="/frontend/icons/icon.png" />
+  <!-- 样式：github-markdown + 本地样式表 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown.min.css" />
+  <link rel="stylesheet" href="/frontend/style.css?v=20260415k" />
+</head>
+
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="模块导航">
+      <div style="padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 20px;">
+        <img src="/frontend/icons/icon.png" style="width: 48px; height: 48px; object-fit: contain; flex-shrink: 0;" alt="Icon" />
+        <div style="font-weight: 900; font-size: 18px; color: var(--text); letter-spacing: 2px;">智汇交枢</div>
+      </div>
+      <div class="module-switch">
+        <button id="module1Btn" class="module-btn active" type="button">
+          <img src="/frontend/icons/M1.png" class="module-icon" alt="" />
+          <span>车辆档案</span>
+        </button>
+        <button id="module2Btn" class="module-btn" type="button">
+          <img src="/frontend/icons/M2.png" class="module-icon" alt="" />
+          <span>视频分析</span>
+        </button>
+        <button id="module3Btn" class="module-btn" type="button">
+          <img src="/frontend/icons/M3.png" class="module-icon" alt="" />
+          <span>知识图谱</span>
+        </button>
+        <button id="module5Btn" class="module-btn" type="button">
+          <img src="/frontend/icons/M4.png" class="module-icon" alt="" />
+          <span>轨迹重建</span>
+        </button>
+        <button id="module4Btn" class="module-btn" type="button">
+          <img src="/frontend/icons/M5.png" class="module-icon" alt="" />
+          <span>智能Agent</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="layout">
+      <!-- ===== Module-1 面板 ===== -->
+      <section id="module1Panel" class="module-panel active">
+        <section class="module1-shell">
+          <!-- 入库管理 -->
+          <section id="module1WorkbenchView" class="module1-view active">
+            <section class="grid module1-pane">
+              <article class="card">
+                <h2>车辆上传</h2>
+                <input id="imgFiles" class="hidden-file-input" type="file" accept=".jpg,.jpeg,.png,.bmp,.webp,image/*"
+                  multiple />
+                <input id="imgFolderFiles" class="hidden-file-input" type="file" accept=".jpg,.jpeg,.png,.bmp,.webp,image/*"
+                  webkitdirectory directory multiple />
+                <div id="imgDropZone" class="drop-zone clickable" role="button" tabindex="0">
+                  <div style="display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center;">
+                    点击上传/拖拽上传<span style="font-size: 12px; color: var(--muted); font-weight: normal;">（支持单张/多张图片及文件夹，格式：.jpg/.png/.bmp/.webp）</span>
+                  </div>
+                </div>
+                <div id="imgUploadPreview" class="upload-preview-grid"></div>
+                <div id="imgUploadMsg" class="pill" style="margin-top: 10px; display: none;"></div>
+                <div id="imgAnalyzeMsg" class="pill" style="margin-top: 10px; display: none;"></div>
+                <div id="imgAnalyzeProgressWrap" class="analyze-progress" hidden>
+                  <div class="analyze-progress-track">
+                    <div id="imgAnalyzeProgressBar" class="analyze-progress-fill"></div>
+                  </div>
+                  <div id="imgAnalyzeProgressText" class="analyze-progress-text">0 / 0</div>
+                </div>
+                <div id="imgAnalyzeFailedList" class="analyze-failed-list" style="display: none;"></div>
+                <button id="imgAnalyzeRetryBtn" type="button" style="display: none; margin-top: 10px;">重试分析</button>
+                <div class="row" style="margin-top: auto; width: 100%; display: flex; gap: 10px;">
+                  <button id="imgUploadBtn" style="flex: 1; min-height: 48px; border-radius: var(--radius); font-weight: bold;">开始上传</button>
+                  <button id="imgClearStateBtn" type="button" style="flex: 1; min-height: 48px; border-radius: var(--radius); font-weight: bold; background: #f3f4f6; color: #1f2a37; border: 1px solid #e5e7eb;">清除上传</button>
+                </div>
+              </article>
+
+              <article class="card" style="display: flex; flex-direction: column;">
+                <div id="imgLibraryHeader" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                  <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">已入库车辆 <div id="imgLibraryMsg" class="pill" style="margin: 0; font-size: 13px; padding: 4px 10px;">等待加载</div></h2>
+                  <div id="imgLibraryActionRow" class="row" style="gap: 8px;">
+                    <button id="imgLibraryRefreshBtn" type="button" style="padding: 6px 12px; font-size: 13px;">刷新车辆库</button>
+                    <button id="imgLibraryBulkModeBtn" type="button" style="padding: 6px 12px; font-size: 13px;">多选</button>
+                    <button id="imgLibrarySelectAllBtn" type="button" style="display: none; padding: 6px 12px; font-size: 13px;">全选</button>
+                    <button id="imgLibraryBulkDeleteBtn" class="danger-btn" type="button" style="display: none; padding: 6px 12px; font-size: 13px;">删除选中</button>
+                  </div>
+                </div>
+                <div id="imgLibraryGrid" class="retrieve-grid" style="flex: 1; overflow-y: auto;"></div>
+              </article>
+            </section>
+          </section>
+
+          <!-- 文本检索 -->
+          <section id="module1TextSearchView" class="module1-view">
+            <section class="grid module1-pane">
+              <article class="card">
+                <h2>文本检索</h2>
+                <div class="row" style="align-items: flex-end;">
+                  <button id="imgTextRetrieveBtn" type="button">开始文本检索</button>
+                </div>
+                <textarea id="imgTextRetrieveQuery" rows="4" placeholder="输入自然语言查询..."
+                  style="margin-top: 10px; width: 100%; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; background: #fff;"></textarea>
+                <div id="imgTextRetrieveMsg" class="pill" style="margin-top: 10px;">等待检索</div>
+                <div id="imgTextRetrieveResult" class="retrieve-grid"></div>
+              </article>
+            </section>
+          </section>
+
+          <!-- 以图搜图 -->
+          <section id="module1ImageSearchView" class="module1-view">
+            <section class="grid module1-pane">
+              <article class="card">
+                <h2>以图搜图</h2>
+                <input id="imgRetrieveFile" class="hidden-file-input" type="file"
+                  accept=".jpg,.jpeg,.png,.bmp,.webp,image/*" />
+
+                <section class="m1-image-top">
+                  <div class="m1-image-left">
+                    <div id="imgRetrieveDropZone" class="drop-zone clickable m1-image-drop-zone" role="button" tabindex="0">
+                      <div style="display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center;">
+                        点击上传/拖拽上传<span style="font-size: 12px; color: var(--muted); font-weight: normal;">（支持单张图片搜索，格式：.jpg/.jpeg/.png/.bmp/.webp）</span>
+                      </div>
+                    </div>
+                    <div class="row m1-image-controls">
+                      <div>
+                        <div style="font-size: 13px; color: var(--muted); margin-bottom: 4px;">Top-K</div>
+                        <input id="imgImageRetrieveTopK" type="number" value="5" min="1"
+                          style="width: 100px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff;" />
+                      </div>
+                      <button id="imgImageRetrieveBtn" type="button">开始搜索</button>
+                      <button id="imgImageRetrieveClearBtn" type="button">清除上传</button>
+                    </div>
+                  </div>
+
+                  <div class="m1-image-right">
+                    <div id="imgRetrievePreview" class="m1-retrieve-preview-board">
+                      <div class="m1-retrieve-preview-empty">上传照片显示区</div>
+                    </div>
+                  </div>
+                </section>
+
+                <div id="imgImageRetrieveMsg" class="pill" style="margin-top: 10px;">等待检索</div>
+
+                <section id="imgImageRetrieveStageStack" class="m1-stage-stack">
+                  <article id="imgCoarseStageCard" class="m1-stage-card" hidden>
+                    <div class="m1-stage-head">
+                      <div id="imgCoarseStageState" class="m1-stage-state pending">粗粒度筛选中</div>
+                      <button id="imgCoarseShowAllBtn" class="m1-stage-all-btn" type="button" hidden>所有结果</button>
+                    </div>
+                    <div id="imgImageRetrieveCoarseResult" class="m1-stage-row"></div>
+                  </article>
+
+                  <article id="imgFineStageCard" class="m1-stage-card" hidden>
+                    <div class="m1-stage-head">
+                      <div id="imgFineStageState" class="m1-stage-state pending">细粒度筛选中</div>
+                      <button id="imgFineShowAllBtn" class="m1-stage-all-btn" type="button" hidden>所有结果</button>
+                    </div>
+                    <div id="imgImageRetrieveResult" class="m1-stage-row"></div>
+                  </article>
+                </section>
+              </article>
+            </section>
+          </section>
+        </section>
+      </section>
+
+      <!-- ===== Module-2 面板 ===== -->
+      <section id="module2Panel" class="module-panel">
+        <section class="grid">
+          <article class="card" style="display: flex; flex-direction: column;">
+            <h2>视频上传</h2>
+            <input id="vid2File" class="hidden-file-input" type="file" accept=".mp4,.avi,video/*" />
+            <div id="vid2DropZone" class="drop-zone clickable" role="button" tabindex="0">
+              <div style="display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center;">
+                点击上传/拖拽上传<span style="font-size: 12px; color: var(--muted); font-weight: normal;">（支持单个视频文件，格式：.mp4/.avi/.mov/.mkv）</span>
+              </div>
+            </div>
+            <div id="vid2FileState" style="display: none;"></div>
+            <div class="row custom-switch-row" style="margin-top: 16px; align-items: center; margin-bottom: 24px;">
+              <label class="custom-switch" style="display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); cursor: pointer; font-weight: 500;">
+                <div style="position: relative; width: 44px; height: 24px;">
+                  <input id="vid2YoloEnhance" type="checkbox" checked class="switch-input" style="opacity: 0; width: 0; height: 0; position: absolute;" />
+                  <span class="switch-slider"></span>
+                </div>
+                开启 YOLO 增强检测
+              </label>
+            </div>
+            
+            <div class="row" style="margin-top: auto; width: 100%; display: flex; gap: 10px;">
+              <button id="vid2AnalyzeBtn" style="flex: 1; min-height: 48px; border-radius: var(--radius); font-weight: bold;">开始分析</button>
+              <button id="vid2ClearBtn" type="button" style="flex: 1; min-height: 48px; border-radius: var(--radius); font-weight: bold; background: #f3f4f6; color: #1f2a37; border: 1px solid #e5e7eb;">清除上传</button>
+            </div>
+            <div id="vid2Msg" class="pill" style="margin-top: 10px; display: none;"></div>
+          </article>
+
+          <article class="card" style="grid-column: span 12; display: flex; flex-direction: column; flex: 1; min-height: 0;">
+            <h2>分析结果</h2>
+            <div class="row" style="align-items: stretch; flex-wrap: nowrap; gap: 20px; flex: 1; min-height: 0;">
+              <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
+                <video id="vid2Player" controls
+                  style="width: 100%; border-radius: var(--radius); background: #000; border: 1px solid var(--line); display: none; margin-bottom: auto;"></video>
+                <div id="vid2Placeholder" class="empty-vehicle-msg" style="flex: 1; background: #fff; border-radius: var(--radius); border: 2px dashed var(--line); aspect-ratio: 16/9;">暂无视频流</div>
+                <div id="vid2StatusBar" style="display: none; margin-top: 8px; font-size: 13px; color: var(--muted); text-align: center;"></div>
+              </div>
+              <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column;">
+                <div style="flex: 1; display: flex; flex-direction: column; background: #fff; border: 2px dashed var(--line); border-radius: var(--radius); overflow: hidden; position: relative;">
+                  <div style="flex: 1; overflow-y: auto;">
+                    <article id="vid2AnswerBox" class="markdown-body" style="background: transparent; border: none; min-height: 100%; display: flex; flex-direction: column; margin: 0;">
+                      <div class="empty-vehicle-msg" style="flex: 1;">暂无分析报告</div>
+                    </article>
+                  </div>
+                  <div id="vid2ReportActions" style="display: none; align-items: center; gap: 10px; padding: 12px; background: #fafafa; border-top: 1px solid var(--line);">
+                    <select id="vid2ReportFormat" style="padding: 6px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; outline: none;">
+                      <option value="md">Markdown</option>
+                      <option value="txt">Text</option>
+                      <option value="docx">Word</option>
+                    </select>
+                    <button id="vid2DownloadReportBtn" type="button" style="padding: 6px 16px; border-radius: var(--radius); font-weight: bold; background: var(--accent); color: #fff; border: none; cursor: pointer;">下载报告</button>
+                    <span id="vid2ReportHint" style="font-size: 12px; color: var(--muted); margin-left: auto;"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </section>
+
+      <!-- ===== Module-3 面板 ===== -->
+      <section id="module3Panel" class="module-panel">
+        <section class="grid module3-grid">
+          <article class="card module3-upload-card">
+            <h2>文档上传</h2>
+            <input id="txtFiles" class="hidden-file-input" type="file" accept=".txt,.doc,.docx,.pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" />
+            <div id="txtDropZone" class="drop-zone clickable module3-drop-preview" role="button" tabindex="0" style="margin-bottom: 20px;"></div>
+            <div class="row" style="margin-top: auto; width: 100%; display: flex; gap: 10px;">
+              <button id="uploadBtn" style="flex: 1; min-height: 48px; border-radius: var(--radius); font-weight: bold;">载入知识库</button>
+              <button id="clearTxtSelectionBtn" type="button" style="flex: 1; min-height: 48px; border-radius: var(--radius); font-weight: bold; background: #f3f4f6; color: #1f2a37; border: 1px solid #e5e7eb;">清除上传</button>
+            </div>
+          </article>
+
+          <article class="card module3-status-card">
+            <h2>构建状态</h2>
+            <ol id="graphragStageList" class="module3-stage-list"></ol>
+          </article>
+
+          <article class="card tasks-card">
+            <div class="card-header" style="display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--line);">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <h2 style="margin: 0; display: flex; align-items: baseline; gap: 8px;">
+                  已上传文档 <span id="docCountBadge" class="doc-count-badge" style="display: none;"></span>
+                </h2>
+                <div id="docGalleryMsg" class="pill" style="margin: 0;">已加载 0 份文档</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button id="m3DocRefreshBtn" type="button" style="padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: 1px solid rgb(30, 50, 100); background: rgb(30, 50, 100); color: #fff; cursor: pointer;">刷新文档库</button>
+                <button id="m3ResetKnowledgeBtn" type="button" style="padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: 1px solid #ef4444; background: #fef2f2; color: #ef4444; cursor: pointer;">重置知识库</button>
+              </div>
+            </div>
+            <div id="docGalleryGrid" class="doc-grid"></div>
+          </article>
+        </section>
+      </section>
+
+      <!-- ===== Module-4 面板（智能Agent） ===== -->
+      <section id="module4Panel" class="module-panel">
+        <div class="agent-shell">
+          <!-- 历史记录侧栏 -->
+          <aside id="agentHistorySidebar" class="agent-history-sidebar">
+            <div class="agent-history-header">
+              <span class="agent-history-title">历史记录</span>
+              <button id="agentHistoryCloseBtn" class="agent-history-close-btn" type="button">×</button>
+            </div>
+            <button id="agentNewChatBtn" class="agent-new-chat-btn" type="button">🤖 新建对话</button>
+            <div id="agentHistoryList" class="agent-history-list">
+              <div class="agent-history-empty">暂无历史记录</div>
+            </div>
+            <button id="agentHistoryClearBtn" class="agent-history-clear-btn" type="button">清空全部历史</button>
+          </aside>
+
+          <!-- 主聊天区 -->
+          <div class="agent-main">
+            <!-- 历史记录切换按钮（左上角悬浮） -->
+            <button id="agentHistoryBtn" class="agent-history-btn" type="button">
+              📜 <span>历史记录</span>
+            </button>
+
+            <!-- 欢迎屏（初始态） -->
+            <div id="agentWelcome" class="agent-welcome">
+              <div class="agent-welcome-logo">
+                <img src="/frontend/icons/M5.png" class="m4-welcome-icon" alt="Agent Logo" />
+              </div>
+              <div id="agentWelcomeTitle" class="agent-welcome-title">有什么能帮到你？</div>
+            </div>
+
+            <!-- 对话流（对话态） -->
+            <div id="agentChatFlow" class="agent-chat-flow" hidden>
+              <div id="agentMessages" class="agent-messages"></div>
+            </div>
+
+            <!-- 主要输入区 -->
+            <div id="agentInputArea" class="agent-input-area">
+              <div class="agent-tag-group">
+                <div class="agent-tags-left">
+                  <button class="agent-tag active" data-mode="knowledge" type="button">知识检索</button>
+                  <button class="agent-tag" data-mode="text" type="button">文本搜车</button>
+                  <button class="agent-tag" data-mode="image" type="button">以图搜图</button>
+                  <button class="agent-tag" data-mode="trajectory" type="button">轨迹问答</button>
+                </div>
+                
+                <!-- 轨迹问答专用辅助栏 (迁移自 Deck) -->
+                <div id="agentTrajSelector" class="agent-traj-selector" hidden>
+                  <select id="agentTrajDocSelect" title="选择轨迹文档"><option value="">文档列表...</option></select>
+                  <select id="agentTrajPlateSelect" title="选择目标车辆"><option value="">目标车辆...</option></select>
+                  <input id="agentTrajPlateKeyword" type="text" placeholder="车牌号..." />
+                  <button id="agentTrajFilterBtn" type="button">检索</button>
+                </div>
+              </div>
+              <div class="agent-input-row">
+                <textarea id="agentTextInput" class="agent-text-input" rows="1" placeholder="输入你的问题..."></textarea>
+                <!-- 以图搜图专用上传区 -->
+                <div id="agentImageInput" class="agent-image-input" hidden>
+                  <input id="agentImageFile" class="hidden-file-input" type="file" accept=".jpg,.jpeg,.png,.bmp,.webp,image/*" />
+                  <div id="agentImageDropZone" class="agent-image-drop" role="button" tabindex="0">
+                    <span>📷 点击或拖拽上传待搜图片</span>
+                  </div>
+                  <div id="agentImagePreview" class="agent-image-preview" hidden></div>
+                </div>
+                <button id="agentSendBtn" class="agent-send-btn" type="button">
+                  <img src="/frontend/icons/query.png" class="agent-send-icon" alt="Query" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Module-5 面板 ===== -->
+      <section id="module5Panel" class="module-panel">
+        <section class="grid">
+          <article class="card m5-upload-card">
+            <h2>轨迹数据上传</h2>
+            <input id="m5TrajFile" class="hidden-file-input" type="file"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+            <div id="m5TrajDropZone" class="drop-zone clickable" role="button" tabindex="0" style="margin-bottom: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center;">
+                点击上传/拖拽上传<span style="font-size: 12px; color: var(--muted); font-weight: normal;">（支持单文件上传，格式：.xlsx）</span>
+              </div>
+            </div>
+            
+            <div class="row" style="margin-top: auto; width: 100%; display: flex; gap: 10px;">
+              <button id="m5TrajUploadBtn" style="flex: 1; min-height: 48px; border-radius: var(--radius); font-weight: bold;">上传并解析</button>
+              <button id="m5TrajResetBtn" type="button" style="flex: 1; min-height: 48px; border-radius: var(--radius); font-weight: bold; background: #f3f4f6; color: #1f2a37; border: 1px solid #e5e7eb;">清除上传</button>
+            </div>
+          </article>
+
+          <article class="card m5-docs-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+              <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">已上传文档列表 <div id="m5DocCountMsg" class="pill" style="margin: 0; font-size: 13px; padding: 4px 10px;">已加载0份文档</div></h2>
+              <div class="row" style="gap: 8px;">
+                <button id="m5DocRefreshBtn" type="button" style="padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: 1px solid rgb(30, 50, 100); background: rgb(30, 50, 100); color: #fff; cursor: pointer;">刷新文档库</button>
+                <button id="m5DocMultiSelectBtn" type="button" style="padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: 1px solid rgb(30, 50, 100); background: rgb(30, 50, 100); color: #fff; cursor: pointer;">多选</button>
+                <button id="m5DocSelectAllBtn" type="button" style="padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: 1px solid rgb(30, 50, 100); background: rgb(30, 50, 100); color: #fff; cursor: pointer; display: none;">全选</button>
+                <button id="m5DocDeleteSelectedBtn" type="button" style="padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: 1px solid #ef4444; background: #fef2f2; color: #ef4444; cursor: pointer; display: none;">删除选中项</button>
+              </div>
+            </div>
+            <div id="m5DocList" class="m5-doc-list">
+              <div class="m5-doc-empty">暂无已上传文档</div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="m5-graph-head">
+              <h2 style="margin: 0;">车辆轨迹图</h2>
+              <div class="row" style="gap: 8px; align-items: center;">
+                <span class="pill" style="margin: 0; font-size: 12px; padding: 4px 10px;">底图：高德地图</span>
+                <input id="m5PlateKeyword" type="text" placeholder="车牌关键字" style="width: 140px; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius); font-size: 13px;" />
+                <button id="m5PlateSearchBtn" type="button" style="padding: 6px 14px; font-size: 13px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer;">筛选车牌</button>
+                <select id="m5PlateSelect" style="min-width: 180px; padding: 6px; border: 1px solid var(--line); border-radius: var(--radius); font-size: 13px;">
+                  <option value="">请先上传并解析数据</option>
+                </select>
+                <button id="m5GraphFitBtn" type="button" style="padding: 6px 14px; font-size: 13px;">重置视野</button>
+              </div>
+            </div>
+            <div id="m5GraphWrap" class="m5-graph-wrap">
+              <div id="m5MapContainer" class="m5-map-container"></div>
+              <div id="m5GraphCy" class="m5-graph-cy"></div>
+            </div>
+            
+          </article>
+
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <!-- 车辆详情弹窗 -->
+  <div id="vehicleInfoModal" class="vehicle-modal" hidden>
+    <section class="vehicle-modal-card" role="dialog" aria-modal="true" aria-labelledby="vehicleInfoTitle">
+      <div class="vehicle-modal-header">
+        <h3 id="vehicleInfoTitle" class="vehicle-modal-title">详细信息</h3>
+        <div class="vehicle-modal-actions">
+          <button id="vehicleReanalyzeBtn" class="vehicle-modal-close" type="button">重做信息</button>
+          <button id="vehicleDeleteBtn" class="vehicle-modal-close danger-btn" type="button">删除车辆</button>
+          <button id="vehicleInfoCloseBtn" class="vehicle-modal-close" type="button">关闭</button>
+        </div>
+      </div>
+      <div class="vehicle-modal-body">
+        <div class="vehicle-modal-media">
+          <img id="vehicleInfoImage" class="vehicle-modal-image" alt="车辆图片" />
+          <div id="vehicleInfoImageMeta" class="vehicle-image-meta">入库时间：未知日期</div>
+        </div>
+        <div id="vehicleInfoBody" class="vehicle-info-list">暂无详情</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 以图搜图“所有结果”弹窗 -->
+  <div id="imgRetrieveAllModal" class="vehicle-modal" hidden>
+    <section class="vehicle-modal-card m1-all-result-modal" role="dialog" aria-modal="true" aria-labelledby="imgRetrieveAllModalTitle">
+      <div class="vehicle-modal-header" style="display: flex; align-items: center; gap: 12px;">
+        <h3 id="imgRetrieveAllModalTitle" class="vehicle-modal-title" style="margin-right: auto;">所有结果</h3>
+        <button id="imgRetrieveAllBulkModeBtn" class="vehicle-modal-btn" type="button" style="display: none;">多选</button>
+        <button id="imgRetrieveAllBulkDeleteBtn" class="vehicle-modal-btn delete" type="button" style="display: none;">删除选中</button>
+        <button id="imgRetrieveAllModalCloseBtn" class="vehicle-modal-close" type="button">关闭</button>
+      </div>
+      <div id="imgRetrieveAllModalBody" class="retrieve-grid m1-all-result-grid"></div>
+    </section>
+  </div>
+
+  <!-- 模块4 以图搜图“所有结果”弹窗 -->
+  <div id="m4RetrieveAllModal" class="vehicle-modal" hidden>
+    <section class="vehicle-modal-card m1-all-result-modal" role="dialog" aria-modal="true" aria-labelledby="m4RetrieveAllModalTitle">
+      <div class="vehicle-modal-header">
+        <h3 id="m4RetrieveAllModalTitle" class="vehicle-modal-title">所有结果</h3>
+        <button id="m4RetrieveAllModalCloseBtn" class="vehicle-modal-close" type="button">关闭</button>
+      </div>
+      <div id="m4RetrieveAllModalBody" class="retrieve-grid m1-all-result-grid"></div>
+    </section>
+  </div>
+
+  <!-- 文档预览弹窗 -->
+  <div id="docPreviewModal" class="doc-modal" hidden>
+    <section class="doc-modal-card" role="dialog" aria-modal="true" aria-labelledby="docPreviewTitle">
+      <div class="doc-modal-header">
+        <h3 id="docPreviewTitle" class="doc-modal-title">文档内容</h3>
+        <button id="docPreviewCloseBtn" class="doc-modal-close" type="button">关闭</button>
+      </div>
+      <pre id="docPreviewBody" class="doc-preview-body">加载中...</pre>
+    </section>
+  </div>
+
+  <!-- 本地 JS 库（W-4：CDN 已下载到本地） -->
+  <script src="/frontend/lib/cytoscape.min.js"></script>
+  <script src="/frontend/lib/marked.min.js"></script>
+  <script src="/frontend/lib/purify.min.js"></script>
+
+  <!-- 应用 JS（顺序：公共 → 各模块） -->
+  <script src="/frontend/js/common.js?v=20260415k"></script>
+  <script src="/frontend/js/module1.js?v=20260415k"></script>
+  <script src="/frontend/js/module2.js?v=20260415k"></script>
+  <script src="/frontend/js/module3.js?v=20260415k"></script>
+  <script src="/frontend/js/module4.js?v=20260415k"></script>
+  <script src="/frontend/js/module5.js?v=20260420b"></script>
+</body>
+
+</html>

@@ -1,0 +1,3 @@
+# Module-3 LLM runtime options
+# Priority: Environment variable > this file > default(false)
+MODULE3_ENABLE_THINKING: false
